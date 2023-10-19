@@ -18,6 +18,6 @@ echo "Miseq output directory set to ${MISEQ_OUTPUTS}."
 curl -o rename_fastqs.R https://raw.githubusercontent.com/outpace-bio/calamari/main/rename_fastqs.R
 mv rename_fastqs.R $MISEQ_OUTPUTS
 
-Rscript "${MISEQ_OUTPUTS}/rename_fastqs.R"
+Rscript "${MISEQ_OUTPUTS}/rename_fastqs.R" $(pwd) $MISEQ_OUTPUTS
 
 ./run-octopus-analysis.sh -a $FASTAS_DIR -d $DOCKER_IMAGE -q $MISEQ_OUTPUTS

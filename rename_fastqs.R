@@ -1,18 +1,23 @@
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
 
+print(length(args))
+print(args[1])
+message("Starting working directory is ",args[1])
+message("Miseq output directory is ",args[2])
+
+starting_wd <- args[1]
+miseq_dir <- args[2]
+
+setwd(miseq_dir)
+
+#load library
 if(!("stringr" %in% installed.packages())){
   install.packages("stringr")
 }
-if(!("rstudioapi" %in% installed.packages())){
-  install.packages("rstudioapi")
-}
-
 library(stringr)
-library("rstudioapi")
 
-#make sure we are in directory 
-wd <- getSourceEditorContext()$path
-wd <- gsub("/rename_fastqs.R","",wd)
-setwd(wd)
+
 
 fastq_loc <- "Alignment_1"
 if(!(fastq_loc %in% list.files())){
@@ -34,6 +39,9 @@ if(!("SampleSheet.csv" %in% list.files())){
   stop("Could not find file SampleSheet.csv directory ", getwd())
 }
 samplesheet <- read.csv("SampleSheet.csv",row.names = NULL)
+write.table(samplesheet,"archived_untransformed_SampleSheet.csv",
+            sep = ",",
+            row.names = FALSE,col.names = FALSE)
 
 
 n_to_skip <- which(samplesheet[,1]=="Sample_ID")
@@ -48,23 +56,7 @@ base_wd <- getwd()
 setwd(fastq_loc)
 fastq_names <- list.files()
 
-if(!("Sample_Name" %in% colnames(samplesheet))){
-  samplesheet$Sample_Name <- apply(samplesheet,1,
-                                   function(x) paste(x["Sample_Plate"],x["Sample_Well"],collapse = "_",
-                                                     sep = "_"))
-  
-  for_ss_replacement <- read.csv(paste(base_wd,"/SampleSheet.csv",sep = ""),header= FALSE)
-  which_start <- which(for_ss_replacement[,1] == "Sample_ID") 
-  for_ss_replacement <- cbind(for_ss_replacement,"")
-  for_ss_replacement[which_start:nrow(for_ss_replacement),ncol(for_ss_replacement)] <- 
-    c("Sample_Name",samplesheet$Sample_Name)
-  
-  write.table(for_ss_replacement,paste(base_wd,"/SampleSheet.csv",sep = ""),
-              sep = ",",
-                                     row.names = FALSE,col.names = FALSE)
-    
-}
-
+replacement_sheet <- samplesheet
 for(id in samplesheet$Sample_ID){
   id <- str_replace_all(id,"_","-")
   which_names <- which(sapply(fastq_names,function(x) grepl(id,x,fixed = TRUE)))
@@ -80,7 +72,23 @@ for(id in samplesheet$Sample_ID){
                             new_name_piece)
     file.rename(fastq_names[name_ind],
                 new_name)
+    
+    replacement_sheet$Sample_ID[replacement_sheet$Sample_ID == untransf_id] <- 
+      paste(id,new_name_piece,sep = "-",collapse = "-")
+    
   }
 }
 
-setwd(base_wd)
+setwd(miseq_dir)
+
+old_sample_sheet <-  read.csv("SampleSheet.csv",row.names = NULL)
+
+old_sample_sheet[n_to_skip + 1:nrow(replacement_sheet),] <- replacement_sheet
+
+write.table(old_sample_sheet,"SampleSheet.csv",
+            sep = ",",
+            row.names = FALSE,col.names = FALSE)
+
+setwd(starting_wd)
+
+

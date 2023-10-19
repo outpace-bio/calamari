@@ -29,7 +29,7 @@ fastq_loc <- paste(fastq_loc,list.files(fastq_loc),"Fastq",sep = "/",collapse = 
 files_in_fastq <- list.files(fastq_loc)
 
 nfastqs <- sum(sapply(files_in_fastq,
-       function(x) grepl(".fastq",x,fixed = TRUE)))
+                      function(x) grepl(".fastq",x,fixed = TRUE)))
 
 if(nfastqs ==0){
   stop(paste("No fastq files detected in subdirectory ",fastq_loc,".",sep = "",collapse = ""))
@@ -47,7 +47,7 @@ write.table(samplesheet,"archived_untransformed_SampleSheet.csv",
 n_to_skip <- which(samplesheet[,1]=="Sample_ID")
 
 if(length(n_to_skip)>0){
-samplesheet <- read.csv("SampleSheet.csv",skip = n_to_skip)
+  samplesheet <- read.csv("SampleSheet.csv",skip = n_to_skip)
 }
 
 
@@ -57,15 +57,26 @@ setwd(fastq_loc)
 fastq_names <- list.files()
 
 replacement_sheet <- samplesheet
+
+samplesheet$Sample_Name <- 
+  do.call(c,
+          lapply(1:nrow(samplesheet),
+                 function(i) paste(samplesheet$Sample_Plate[i],
+                                   samplesheet$Sample_Well[i],
+                                   sep = "_",
+                                   collapse = "_")))
+
+
 for(id in samplesheet$Sample_ID){
+  untransf_id <- id
   id <- str_replace_all(id,"_","-")
   which_names <- which(sapply(fastq_names,function(x) grepl(id,x,fixed = TRUE)))
   for(name_ind in which_names){
     old_name <- fastq_names[name_ind]
     samplesheet_row <- which(sapply(samplesheet$Sample_ID,
-                              function(x)
-                                grepl(x,
-                                      str_replace_all(old_name,"-","_"))))
+                                    function(x)
+                                      grepl(x,
+                                            str_replace_all(old_name,"-","_"))))
     new_name_piece <- str_replace_all(samplesheet$Sample_Name[samplesheet_row],"_","-")
     new_name <- str_replace(old_name,
                             str_replace_all(samplesheet$Sample_ID[samplesheet_row],"_","-"),
@@ -73,10 +84,9 @@ for(id in samplesheet$Sample_ID){
     file.rename(fastq_names[name_ind],
                 new_name)
     
-    replacement_sheet$Sample_ID[replacement_sheet$Sample_ID == untransf_id] <- 
-      paste(id,new_name_piece,sep = "-",collapse = "-")
-    
   }
+  replacement_sheet$Sample_ID[replacement_sheet$Sample_ID == untransf_id] <- 
+    str_replace_all(paste(id,new_name_piece,sep = "-",collapse = "-"),"-","_")
 }
 
 setwd(miseq_dir)

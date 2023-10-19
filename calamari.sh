@@ -17,7 +17,7 @@ echo "Miseq output directory set to ${MISEQ_OUTPUTS}."
 #download fasta creation script, move it, and run it
 curl -o csv_to_fasta.R https://raw.githubusercontent.com/outpace-bio/calamari/main/csv_to_fasta.R
 mv csv_to_fasta.R $FASTAS_DIR
-Rscript $(pwd) "${FASTAS_DIR}/csv_to_fasta.R"
+Rscript "${FASTAS_DIR}/csv_to_fasta.R" $(pwd) $FASTAS_DIR
 
 # download fastq processing script, move it, and run it
 curl -o rename_fastqs.R https://raw.githubusercontent.com/outpace-bio/calamari/main/rename_fastqs.R

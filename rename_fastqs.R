@@ -81,7 +81,8 @@ start_char <- min(which(unique_chars))
 samplesheet$trunc_id <- sapply(samplesheet$Sample_ID,
                                function(x) substr(x,start_char,nchar(x)))
 
-for(id in samplesheet$Sample_ID){
+for(i in 1:nrow(samplesheet)){
+  id <- samplesheet$Sample_ID[i]
   untransf_id <- id
   id <- str_replace_all(id,"_","-")
   trunc_id <- str_replace_all(samplesheet$trunc_id[i],"_","-")

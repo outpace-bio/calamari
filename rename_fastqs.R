@@ -52,7 +52,6 @@ if(length(n_to_skip)>0){
 
 
 
-base_wd <- getwd()
 setwd(fastq_loc)
 fastq_names <- list.files()
 
@@ -65,15 +64,31 @@ samplesheet$Sample_Name <-
                                    samplesheet$Sample_Well[i],
                                    sep = "_",
                                    collapse = "_")))
+chars <- 
+  lapply(1:nrow(samplesheet),
+         function(i) strsplit(samplesheet$Sample_ID[i],split = "")[[1]])
 
+min_len <- min(sapply(1:nrow(samplesheet),function(i) length(chars[[i]])))
+
+unique_chars <- sapply(1:min_len,
+                       function(k){
+                         pos_chars <- sapply(1:nrow(samplesheet),
+                                             function(i) chars[[i]][k])
+                         !all(pos_chars == pos_chars[1])
+                       })
+start_char <- min(which(unique_chars))
+
+samplesheet$trunc_id <- sapply(samplesheet$Sample_ID,
+                               function(x) substr(x,start_char,nchar(x)))
 
 for(id in samplesheet$Sample_ID){
   untransf_id <- id
   id <- str_replace_all(id,"_","-")
-  which_names <- which(sapply(fastq_names,function(x) grepl(id,x,fixed = TRUE)))
+  trunc_id <- str_replace_all(samplesheet$trunc_id[i],"_","-")
+  which_names <- which(sapply(fastq_names,function(x) grepl(trunc_id,x,fixed = TRUE)))
   for(name_ind in which_names){
     old_name <- fastq_names[name_ind]
-    samplesheet_row <- which(sapply(samplesheet$Sample_ID,
+    samplesheet_row <- which(sapply(samplesheet$cleaned_id,
                                     function(x)
                                       grepl(x,
                                             str_replace_all(old_name,"-","_"))))

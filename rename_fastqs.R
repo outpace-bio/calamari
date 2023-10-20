@@ -41,7 +41,7 @@ if(!("SampleSheet.csv" %in% list.files())){
 samplesheet <- read.csv("SampleSheet.csv",row.names = NULL)
 write.table(samplesheet,"archived_untransformed_SampleSheet.csv",
             sep = ",",
-            row.names = FALSE,col.names = FALSE)
+            row.names = FALSE,col.names = FALSE,quote = FALSE)
 
 
 n_to_skip <- which(samplesheet[,1]=="Sample_ID")
@@ -113,7 +113,8 @@ old_sample_sheet[n_to_skip + 1:nrow(replacement_sheet),] <- replacement_sheet
 
 write.table(old_sample_sheet,"SampleSheet.csv",
             sep = ",",
-            row.names = FALSE,col.names = FALSE)
+            row.names = FALSE,col.names = FALSE,
+            quote = FALSE)
 
 setwd(starting_wd)
 

@@ -89,7 +89,7 @@ for(i in 1:nrow(samplesheet)){
   which_names <- which(sapply(fastq_names,function(x) grepl(trunc_id,x,fixed = TRUE)))
   for(name_ind in which_names){
     old_name <- fastq_names[name_ind]
-    samplesheet_row <- which(sapply(samplesheet$cleaned_id,
+    samplesheet_row <- which(sapply(samplesheet$trunc_id,
                                     function(x)
                                       grepl(x,
                                             str_replace_all(old_name,"-","_"))))
